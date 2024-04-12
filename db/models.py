@@ -16,6 +16,7 @@ class Users(Base):
     lastLogin = Column(DateTime)
     creationTime = Column(DateTime)
     updationTime = Column(DateTime)
+    lastLoginIP = Column(String(20))
     
 
 class Tasks(Base):
