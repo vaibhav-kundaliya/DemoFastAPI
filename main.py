@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 from db.database import engine
 from db import models
 from os.path import join, dirname
-models.Base.metadata.create_all(bind=engine)
-
 dotenv_path = join(dirname(__file__), './.env')
 load_dotenv(dotenv_path)
+models.Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
 

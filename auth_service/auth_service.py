@@ -1,4 +1,6 @@
+from ast import Try
 import sys
+from tokenize import Token
 sys.path.append("..")
 from fastapi import APIRouter, Depends, HTTPException
 from db.database import SessionLocal
@@ -40,4 +42,17 @@ async def createUser(reqData: schemas.CreateUser, db: Session = Depends(get_db))
         print("-------",exe)
         raise HTTPException(status_code=403, detail='Email already exist')
     except Exception as exe:
+        print(exe)
         raise HTTPException(status_code=500, detail='Server Error')
+
+@auth_service.post("/login")
+async def login(reqData: schemas.CreateUser, db: Session = Depends(get_db)):
+    try:
+        user =  crud.get_user(db, reqData.email)
+        if password.compare(user.password, dict(reqData)['password']):
+            access_token = token.create_access_token(schemas.User.from_orm(user))
+            return {"Access-Token" : access_token,"UserInfo":schemas.User.from_orm(user)}
+        return {"detail": "user exists"}
+    except  Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Server Error")

@@ -5,11 +5,11 @@ from psycopg2 import errors
 
 
 def get_users(db: Session):
-    return db.query(models.User).all()
+    return db.query(models.Users).all()
 
 
 def get_user(db: Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
+    return db.query(models.Users).filter(models.Users.email == email).first()
 
 
 def get_tasks(db: Session):

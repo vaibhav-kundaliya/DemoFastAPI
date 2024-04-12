@@ -1,6 +1,6 @@
 from passlib.context import CryptContext
 
-cryptcont = CryptContext(schemes=['bcrypt'])
+cryptcont = CryptContext(schemes=['bcrypt'], deprecated="auto")
 
 def encrypt(plain_text):
     return cryptcont.hash(plain_text)
