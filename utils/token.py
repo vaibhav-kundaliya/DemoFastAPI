@@ -23,8 +23,8 @@ def is_token_expired(token: str):
     decoded_jwt = eval(jwt.decode(token, SECRET_KEY, algorithms='HS256'))
     expired_time = datetime.strptime(decoded_jwt.get("exp"),"%Y-%m-%d %H:%M:%S")
     if expired_time <= datetime.utcnow():
-        return False
-    return True
+        return True
+    return False
 
 def get_email_from_token(token: str):
     decoded_jwt = jwt.decode(token, SECRET_KEY, algorithms='HS256')

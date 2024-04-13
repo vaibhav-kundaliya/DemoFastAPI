@@ -1,6 +1,4 @@
-from ast import Try
 import sys
-from tokenize import Token
 sys.path.append("..")
 from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from db.database import SessionLocal
@@ -27,38 +25,33 @@ def root():
     return {"message":"Service is on"}
 
 @auth_service.post("/createUser")
-async def createUser(reqData: schemas.CreateUser, request: Request, db: Session = Depends(get_db)):
-    createUser_dict = dict(reqData)
-    if not re.match(EMAIL_RE, createUser_dict['email']):
+async def createUser(reqData: schemas.CreateUserReq, request: Request, db: Session = Depends(get_db)):
+    if not re.match(EMAIL_RE, reqData.email):
         raise HTTPException(status_code=403, detail="Enter valid email address")
-    hashed_pwd = password.encrypt(createUser_dict['password'])
-    reqData = schemas.CreateUser(email=reqData.email, password=hashed_pwd)
+    hashed_pwd = password.encrypt(reqData.password)
+    reqData.password = hashed_pwd
     security_token = token.create_access_token({"email":reqData.email})
     try:
-        lastLoginIp = request.client.host
-        crud.create_user(db, reqData, lastLoginIp)
+        print(reqData.email, reqData.password)
+        crud.create_user(db, schemas.CreateUserDb(email=reqData.email, password=reqData.password, lastLoginIP=request.client.host))
         return {"detail": "User created", "Token":security_token}
     except IntegrityError as exe:
         print(exe)
-        db.rollback()
         raise HTTPException(status_code=403, detail='Email already exist')
     except Exception as exe:
         print(exe)
         raise HTTPException(status_code=500, detail='Server Error')
-
-
+    
 @auth_service.post("/login")
-async def loginUser(reqData:schemas.CreateUser, request: Request, db: Session = Depends(get_db)):
+async def loginUser(reqData:schemas.CreateUserReq, request: Request, db: Session = Depends(get_db)):
     try:
         user = crud.get_user(db, reqData.email)
         if password.compare(reqData.password, user.password):
             sec_token = token.create_access_token(dict(reqData))
-            crud.update_user_lastLogin(db, schemas.ReadUser(email=reqData.email, lastLoginIP=request.client.host, is_loggedIn=True))
+            crud.update_user_lastLogin(db, schemas.LoginUserUpdateDb(email=reqData.email, lastLoginIP=request.client.host))
             return {"detail":"user is authenticated", "token":sec_token}
         else:
             HTTPException(status_code=403, detail="Wrong password")
-    except HTTPException as Hexe:
-        raise Hexe
     except Exception as exe:
         print(exe)
         raise HTTPException(status_code=500, detail="Server Error")
@@ -67,7 +60,8 @@ async def loginUser(reqData:schemas.CreateUser, request: Request, db: Session = 
 async def logoutUser(Authorization: str = Header(strict=True), db: Session = Depends(get_db)):
     try:
         email = token.get_email_from_token(Authorization)
-        crud.update_user_logout(db,schemas.ReadUser(email=email) )
+        crud.update_user_logout(db,schemas.LoginUserUpdateDb(email=email, is_loggedIn=False))
+        return {"detail":"user is logged out"}
     except Exception as exe:
         print(exe)
 

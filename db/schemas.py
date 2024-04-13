@@ -1,33 +1,17 @@
+from db.database import Base
 from pydantic import BaseModel
 from typing import Union
-from typing import Union
-from .models import TaskStatus
 
-
-class UserBase(BaseModel):
+class ReadUser(BaseModel):
     email: str
 
-
-class TaskBase(BaseModel):
-    userID: str
-    title: str
-    description: str
-
-
-class CreateUser(UserBase):
+class CreateUserReq(ReadUser): 
     password: str
 
-
-class CreateTask(TaskBase):
-    status: TaskStatus
-    pass
-
-
-class ReadUser(UserBase):
-    email: str
-    is_loggedIn: Union[bool, None] = None
+class CreateUserDb(CreateUserReq):
+    lastLoginIP: str
+    is_loggedIn: bool = True
+    
+class LoginUserUpdateDb(ReadUser):
     lastLoginIP: Union[str, None] = None
-
-
-class ReadTask(TaskBase):
-    id: Union[str, None]
+    is_loggedIn: bool = True
