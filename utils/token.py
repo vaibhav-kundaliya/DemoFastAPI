@@ -15,13 +15,17 @@ JWT_TOKEN_EXPIRY_IN_HOURS = int(os.getenv("JWT_TOKEN_EXPIRY_IN_HOURS"))
 def create_access_token(reqData_obj: dict):
     data = dict(reqData_obj)
     expire_time = datetime.utcnow() + timedelta(hours=JWT_TOKEN_EXPIRY_IN_HOURS)
-    data['exp'] = expire_time
+    data['exp_time'] = expire_time.strftime("%Y-%m-%d %H:%M:%S")
     encoded_jwt = jwt.encode(data, SECRET_KEY, algorithm='HS256')
     return encoded_jwt
 
 def is_token_expired(token: str):
-    decoded_jwt = jwt.decode(token, SECRET_KEY, algorithms='HS256')
-    expired_time = decoded_jwt.get("exp")
+    decoded_jwt = eval(jwt.decode(token, SECRET_KEY, algorithms='HS256'))
+    expired_time = datetime.strptime(decoded_jwt.get("exp"),"%Y-%m-%d %H:%M:%S")
     if expired_time <= datetime.utcnow():
         return False
     return True
+
+def get_email_from_token(token: str):
+    decoded_jwt = jwt.decode(token, SECRET_KEY, algorithms='HS256')
+    return decoded_jwt.get('email')
